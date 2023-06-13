@@ -30,11 +30,11 @@ client.connect((err) => {
 
 // Cadastro de Cliente
 app.post('/api/clientes/cadastrar', (req, res) => {
-  const { nome, email, endereco, contato } = req.body;
-  const cliente = { nome, email, endereco, contato };
+  const { nome, email, endereco, contato, senha} = req.body;
+  const cliente = { nome, email, endereco, contato, senha};
 
-  const sqlQuery = 'INSERT INTO clientes (nome, email, endereco, contato) VALUES ($1, $2, $3, $4)';
-  const values = [cliente.nome, cliente.email, cliente.endereco, cliente.contato];
+  const sqlQuery = 'INSERT INTO clientes (nome, email, endereco, contato, senha) VALUES ($1, $2, $3, $4, $5)';
+  const values = [cliente.nome, cliente.email, cliente.endereco, cliente.contato, cliente.senha];
 
   client.query(sqlQuery, values, (err, result) => {
     if (err) {

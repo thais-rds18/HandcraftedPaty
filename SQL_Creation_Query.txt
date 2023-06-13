@@ -1,0 +1,39 @@
+-- Criar a tabela "clientes"
+CREATE TABLE clientes (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  endereco VARCHAR(255) NOT NULL,
+  contato VARCHAR(255) NOT NULL,
+senha VARCHAR(255) NOT NULL
+);
+
+-- Criar a tabela "categorias"
+CREATE TABLE categorias (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL
+);
+
+-- Criar a tabela "produtos"
+CREATE TABLE produtos (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  preco DECIMAL(10, 2) NOT NULL,
+  categoria_id INT REFERENCES categorias(id) NOT NULL
+);
+
+-- Criar a tabela "pedidos"
+CREATE TABLE pedidos (
+  id SERIAL PRIMARY KEY,
+  cliente_id INT REFERENCES clientes(id) NOT NULL,
+  status VARCHAR(255) NOT NULL,
+  informacoes_envio TEXT
+);
+
+-- Criar a tabela "itens_pedido"
+CREATE TABLE itens_pedido (
+  id SERIAL PRIMARY KEY,
+  pedido_id INT REFERENCES pedidos(id) NOT NULL,
+  produto_id INT REFERENCES produtos(id) NOT NULL,
+  quantidade INT NOT NULL
+);
