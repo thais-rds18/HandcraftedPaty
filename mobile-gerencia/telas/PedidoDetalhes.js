@@ -1,13 +1,178 @@
-import React, { useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Card, Divider, Layout, useTheme, Text, Button, ApplicationProvider } from '@ui-kitten/components';
+import { mapping, light as lightTheme } from '@eva-design/eva';
 import { useNavigation } from '@react-navigation/native';
 
-const PedidoDetalhes = () => {
-    return (
-    <View>
-      <Text>Pedidos detalhes Page</Text>
-      </View>
+const theme = {
+  ...lightTheme,
+  "color-primary-500": "#604c7d",
+  "color-primary-600": "#5495c5",
+  "color-primary-700": "#96c6eb",
+  "background-basic-color-1": "#fcf9fb",
+};
+
+const PedidoDetalhes = ({ route }) => {
+  const navigation = useNavigation();
+  const { pedido } = route.params;
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const getStatusTextColor = (status) => {
+    switch (status) {
+      case 'Concluído':
+        return '#00CC00'; 
+      case 'Em andamento':
+        return '#0066FF'; 
+      case 'Pendente':
+        return '#FFA500';
+      case 'Cancelado':
+        return '#FF0000'; 
+      default:
+        return '#000000'; 
+    }
+  };
+
+  const [cliente, setCliente] = useState(null);
+  const [itensPedido, setItensPedido] = useState([]);
+
+  useEffect(() => {
+    const fetchCliente = () => {
+      fetch(`http://handcrafedpaty-api.onrender.com/api/clientes/${pedido.cliente_id}`)
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Erro ao buscar os dados do cliente');
+          }
+        })
+        .then((data) => {
+          setCliente(data);
+        })
+        .catch((error) => {
+          console.error('Erro ao realizar a chamada de API:', error);
+        });
+    };
+
+    const fetchItensPedido = () => {
+      fetch(`http://handcrafedpaty-api.onrender.com/api/pedidos/${pedido.id}/itens`)
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Erro ao buscar os itens do pedido');
+          }
+        })
+        .then((data) => {
+          const itemPromises = data.map((item) => {
+            return fetch(`http://handcrafedpaty-api.onrender.com/api/produtos/${item.produto_id}`)
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                } else {
+                  throw new Error(`Erro ao buscar o produto com ID ${item.produto_id}`);
+                }
+              })
+              .then((produto) => {
+                return {
+                  id: item.id,
+                  produto_id: item.produto_id,
+                  quantidade: item.quantidade,
+                  nome: produto.nome,
+                };
+              });
+          });
+    
+          Promise.all(itemPromises)
+            .then((itens) => {
+              setItensPedido(itens);
+            })
+            .catch((error) => {
+              console.error('Erro ao buscar os itens do pedido:', error);
+            });
+        })
+        .catch((error) => {
+          console.error('Erro ao realizar a chamada de API:', error);
+        });
+    };
+   
+
+    fetchCliente();
+    fetchItensPedido();
+  }, []);
+
+  return (
+    <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} customFonts={{}}>
+      <Layout style={{ flex: 1, padding: 16, backgroundColor: theme['background-basic-color-1'] }}>
+        <Divider />
+        <TouchableOpacity onPress={handleGoBack} style={{ position: 'absolute', top: 16, right: 16, zIndex: 999 }}>
+          <Text category="h1">↩</Text>
+        </TouchableOpacity>
+        <Text category="h3" style={{ marginBottom: 16 }}>Detalhes do Pedido</Text>
+        <Divider style={{ marginBottom: 25 }} />
+        <Card style={{ marginBottom: 16 }}>
+          <Layout>
+            <View style={styles.view}>
+              <Text category="h4">Pedido nº {pedido.id}</Text>
+            </View>
+            <View style={styles.view}>
+              <Text category="h5">Status:</Text>
+              <Text category="h5" style={{ marginLeft: 8, color: getStatusTextColor(pedido.status) }}>{pedido.status}</Text>
+            </View>
+              <Text category="h5">Informações de Envio:</Text>
+              <Text category="h6" style={{ marginLeft: 8 }}>{pedido.informacoes_envio}</Text>
+          </Layout>
+        </Card>
+
+        {cliente && (
+          <Card style={{ marginBottom: 16 }}>
+            <Layout>
+              <View style={styles.view}>
+                <Text category="h4">Cliente:</Text>
+                <Text category="h5" style={{ marginLeft: 8 }}>{cliente.nome}</Text>
+              </View>
+              <View style={styles.view}>
+                <Text category="h5">Email:</Text>
+                <Text category="h5" style={{ marginLeft: 8 }}>{cliente.email}</Text>
+              </View>
+              <View style={styles.view}>
+                <Text category="h5">Endereço:</Text>
+                <Text category="h6" style={{ marginLeft: 8 }}>{cliente.endereco}</Text>
+              </View>
+            </Layout>
+          </Card>
+        )}
+
+        {itensPedido.length > 0 && (
+          <Card style={{ marginBottom: 16 }}>
+            <Layout style={{justifyContent: 'space-between'}}>
+              <View style={styles.view}>
+                <Text category="h4">Itens do Pedido:</Text>
+              </View>
+              {itensPedido.map((item) => (
+                <View style={styles.view} key={item.id}>
+                  <Text category="h6">ID {item.produto_id}</Text>
+                  <Text category="h6" style={{ marginLeft: 8 }}>{item.nome}</Text>
+                  <Text category="h6" style={{ marginLeft: 16 }}>QTD:</Text>
+                  <Text category="h6" style={{ marginLeft: 8 }}>{item.quantidade}</Text>
+                </View>
+              ))}
+            </Layout>
+          </Card>
+        )}
+      </Layout>
+    </ApplicationProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  view: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+});
 
 export default PedidoDetalhes;

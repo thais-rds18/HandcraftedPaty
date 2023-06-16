@@ -49,6 +49,7 @@ app.post('/api/clientes/cadastrar', (req, res) => {
   });
 });
 
+
 // Obter todos os clientes
 app.get('/api/clientes', (req, res) => {
   const sqlQuery = 'SELECT * FROM clientes';
@@ -190,6 +191,35 @@ app.delete('/api/pedidos/:id_pedido/itens/:id_item/remover', (req, res) => {
 
     res.status(204).send();
   });
+});
+//criar pedido
+app.post('/api/pedidos', async (req, res) => {
+  try {
+    const { nome, preco, categoria_id, quantidade_estoque } = req.body;
+
+    const client = await pool.connect();
+    await client.query('BEGIN');
+
+    try {
+      const query = 'INSERT INTO pedidos (nome, preco, categoria_id, quantidade_estoque) VALUES ($1, $2, $3, $4) RETURNING id';
+      const values = [nome, preco, categoria_id, quantidade_estoque];
+      const result = await client.query(query, values);
+
+      const pedidoId = result.rows[0].id;
+
+      await client.query('COMMIT');
+
+      res.status(201).json({ message: 'Pedido criado com sucesso', pedidoId });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Erro ao criar o pedido', error);
+    res.status(500).json({ message: 'Erro ao criar o pedido' });
+  }
 });
 
 //Obter detalhes de um pedido, incluindo os itens:
