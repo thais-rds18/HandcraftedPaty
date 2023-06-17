@@ -98,24 +98,37 @@ app.post('/api/pedidos', async (req, res) => {
 
 app.delete('/api/pedidos/:id_pedido', (req, res) => {
   const { id_pedido } = req.params;
-  
-  const sqlQuery = 'DELETE FROM pedidos WHERE id = $1';
-  const values = [id_pedido];
-  
-  client.query(sqlQuery, values, (err, result) => {
-  if (err) {
-  console.error('Erro ao executar a consulta:', err);
-  return res.status(500).json({ error: 'Erro ao remover o pedido' });
-  }
-  if (result.rowCount === 0) {
-    return res.status(404).json({ error: 'Pedido não encontrado' });
-  }
-  
-  console.log('Pedido removido com sucesso do banco de dados');
-  
-  res.status(204).send();
+
+  const deleteRelatedItemsQuery = 'DELETE FROM itens_pedido WHERE pedido_id = $1';
+  const deleteRelatedItemsValues = [id_pedido];
+
+  client.query(deleteRelatedItemsQuery, deleteRelatedItemsValues, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao remover os itens relacionados ao pedido' });
+    }
+
+    // Proceed with deleting the record in the "pedidos" table
+    const deletePedidoQuery = 'DELETE FROM pedidos WHERE id = $1';
+    const deletePedidoValues = [id_pedido];
+
+    client.query(deletePedidoQuery, deletePedidoValues, (err, result) => {
+      if (err) {
+        console.error('Erro ao executar a consulta:', err);
+        return res.status(500).json({ error: 'Erro ao remover o pedido' });
+      }
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: 'Pedido não encontrado' });
+      }
+
+      console.log('Pedido removido com sucesso do banco de dados');
+
+      res.status(204).send();
+    });
+  });
 });
-});
+
 
 //Obter detalhes de um pedido, incluindo os itens:
 app.get('/api/pedidos/:id_pedido', (req, res) => {
