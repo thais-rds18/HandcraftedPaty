@@ -121,7 +121,7 @@ app.delete('/api/pedidos/:id_pedido', (req, res) => {
 app.get('/api/pedidos/:id_pedido', (req, res) => {
   const { id_pedido } = req.params;
 
-  const sqlQuery = 'SELECT pedidos.id, pedidos.status, pedidos.date, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
+  const sqlQuery = 'SELECT pedidos.id, pedidos.status, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
   const values = [id_pedido];
 
   client.query(sqlQuery, values, (err, result) => {
