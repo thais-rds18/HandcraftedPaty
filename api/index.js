@@ -24,29 +24,8 @@ client.connect((err) => {
     console.error('Erro ao conectar ao banco de dados:', err);
   } else {
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
-    app.listen(PORT, () => console.log(`A API VIVE! Está rodando em http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`A API VIVE! Está rodando na porta ${PORT}`));
   }
-});
-
-// Cadastro de Cliente
-app.post('/api/clientes/cadastrar', (req, res) => {
-  const { nome, email, endereco, contato } = req.body;
-  const cliente = { nome, email, endereco, contato };
-
-  const sqlQuery = 'INSERT INTO clientes (nome, email, endereco, contato) VALUES ($1, $2, $3, $4)';
-  const values = [cliente.nome, cliente.email, cliente.endereco, cliente.contato];
-
-  client.query(sqlQuery, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao cadastrar o cliente' });
-    }
-
-    const cliente = result.rows[0];
-    console.log('Cliente cadastrado com sucesso no banco de dados');
-
-    res.status(201).json(cliente);
-  });
 });
 
 
@@ -83,6 +62,171 @@ app.get('/api/clientes/:id', (req, res) => {
     }
 
     res.status(200).json(cliente);
+  });
+});
+
+
+//criar pedido
+app.post('/api/pedidos', async (req, res) => {
+  try {
+    const { nome, preco, categoria_id, quantidade_estoque } = req.body;
+
+    const client = await pool.connect();
+    await client.query('BEGIN');
+
+    try {
+      const query = 'INSERT INTO pedidos (nome, preco, categoria_id, quantidade_estoque) VALUES ($1, $2, $3, $4) RETURNING id';
+      const values = [nome, preco, categoria_id, quantidade_estoque];
+      const result = await client.query(query, values);
+
+      const pedidoId = result.rows[0].id;
+
+      await client.query('COMMIT');
+
+      res.status(201).json({ message: 'Pedido criado com sucesso', pedidoId });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Erro ao criar o pedido', error);
+    res.status(500).json({ message: 'Erro ao criar o pedido' });
+  }
+});
+
+app.delete('/api/pedidos/:id_pedido', (req, res) => {
+  const { id_pedido } = req.params;
+  
+  const sqlQuery = 'DELETE FROM pedidos WHERE id = $1';
+  const values = [id];
+  
+  client.query(sqlQuery, values, (err, result) => {
+  if (err) {
+  console.error('Erro ao executar a consulta:', err);
+  return res.status(500).json({ error: 'Erro ao remover o pedido' });
+  }
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: 'Pedido não encontrado' });
+  }
+  
+  console.log('Pedido removido com sucesso do banco de dados');
+  
+  res.status(204).send();
+});
+});
+
+//Obter detalhes de um pedido, incluindo os itens:
+app.get('/api/pedidos/:id_pedido', (req, res) => {
+  const { id_pedido } = req.params;
+
+  const sqlQuery = 'SELECT pedidos.id, pedidos.status, pedidos.data, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
+  const values = [id_pedido];
+
+  client.query(sqlQuery, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao obter os detalhes do pedido' });
+    }
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    const pedido = {
+      id: result.rows[0].id,
+      status: result.rows[0].status,
+      data: result.rows[0].data,
+      itens: result.rows.map(row => ({
+        produto_id: row.produto_id,
+        quantidade: row.quantidade
+      }))
+    };
+
+    res.status(200).json(pedido);
+  });
+});
+
+// Atualizar um pedido
+app.put('/api/pedidos/:id_pedido/atualizar', (req, res) => {
+  const { id_pedido } = req.params;
+  const { status } = req.body;
+
+  const sqlQuery = 'UPDATE pedidos SET status = $1 WHERE id = $2';
+  const values = [status, id_pedido];
+
+  client.query(sqlQuery, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar o pedido' });
+    }
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    console.log('Pedido atualizado com sucesso');
+
+    res.status(200).send();
+  });
+});
+
+// Obter todos os pedidos
+app.get('/api/pedidos', (req, res) => {
+  const sqlQuery = 'SELECT * FROM pedidos';
+
+  client.query(sqlQuery, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao obter os pedidos' });
+    }
+
+    const pedidos = result.rows;
+    res.status(200).json(pedidos);
+  });
+});
+
+// Obter todos os itens de um pedido
+app.get('/api/pedidos/:id_pedido/itens', (req, res) => {
+  const { id_pedido } = req.params;
+
+  const sqlQuery = 'SELECT * FROM itens_pedido WHERE pedido_id = $1';
+  const values = [id_pedido];
+
+  client.query(sqlQuery, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao obter os itens do pedido' });
+    }
+
+    const itens = result.rows;
+    res.status(200).json(itens);
+  });
+});
+
+
+//-------------------------------------------------------------------------------------------
+//não utilizadas ainda
+
+// Cadastro de Cliente
+app.post('/api/clientes/cadastrar', (req, res) => {
+  const { nome, email, endereco, contato } = req.body;
+  const cliente = { nome, email, endereco, contato };
+
+  const sqlQuery = 'INSERT INTO clientes (nome, email, endereco, contato) VALUES ($1, $2, $3, $4)';
+  const values = [cliente.nome, cliente.email, cliente.endereco, cliente.contato];
+
+  client.query(sqlQuery, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao executar a consulta:', err);
+      return res.status(500).json({ error: 'Erro ao cadastrar o cliente' });
+    }
+
+    const cliente = result.rows[0];
+    console.log('Cliente cadastrado com sucesso no banco de dados');
+
+    res.status(201).json(cliente);
   });
 });
 
@@ -192,146 +336,7 @@ app.delete('/api/pedidos/:id_pedido/itens/:id_item/remover', (req, res) => {
     res.status(204).send();
   });
 });
-//criar pedido
-app.post('/api/pedidos', async (req, res) => {
-  try {
-    const { nome, preco, categoria_id, quantidade_estoque } = req.body;
 
-    const client = await pool.connect();
-    await client.query('BEGIN');
-
-    try {
-      const query = 'INSERT INTO pedidos (nome, preco, categoria_id, quantidade_estoque) VALUES ($1, $2, $3, $4) RETURNING id';
-      const values = [nome, preco, categoria_id, quantidade_estoque];
-      const result = await client.query(query, values);
-
-      const pedidoId = result.rows[0].id;
-
-      await client.query('COMMIT');
-
-      res.status(201).json({ message: 'Pedido criado com sucesso', pedidoId });
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('Erro ao criar o pedido', error);
-    res.status(500).json({ message: 'Erro ao criar o pedido' });
-  }
-});
-
-//Obter detalhes de um pedido, incluindo os itens:
-app.get('/api/pedidos/:id_pedido', (req, res) => {
-  const { id_pedido } = req.params;
-
-  const sqlQuery = 'SELECT pedidos.id, pedidos.status, pedidos.data, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
-  const values = [id_pedido];
-
-  client.query(sqlQuery, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao obter os detalhes do pedido' });
-    }
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Pedido não encontrado' });
-    }
-
-    const pedido = {
-      id: result.rows[0].id,
-      status: result.rows[0].status,
-      data: result.rows[0].data,
-      itens: result.rows.map(row => ({
-        produto_id: row.produto_id,
-        quantidade: row.quantidade
-      }))
-    };
-
-    res.status(200).json(pedido);
-  });
-});
-
-// Atualizar um pedido
-app.put('/api/pedidos/:id_pedido/atualizar', (req, res) => {
-  const { id_pedido } = req.params;
-  const { status } = req.body;
-
-  const sqlQuery = 'UPDATE pedidos SET status = $1 WHERE id = $2';
-  const values = [status, id_pedido];
-
-  client.query(sqlQuery, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao atualizar o pedido' });
-    }
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Pedido não encontrado' });
-    }
-
-    console.log('Pedido atualizado com sucesso');
-
-    res.status(200).send();
-  });
-});
-
-// Obter todos os pedidos
-app.get('/api/pedidos', (req, res) => {
-  const sqlQuery = 'SELECT * FROM pedidos';
-
-  client.query(sqlQuery, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao obter os pedidos' });
-    }
-
-    const pedidos = result.rows;
-    res.status(200).json(pedidos);
-  });
-});
-
-// Obter todos os itens de um pedido
-app.get('/api/pedidos/:id_pedido/itens', (req, res) => {
-  const { id_pedido } = req.params;
-
-  const sqlQuery = 'SELECT * FROM itens_pedido WHERE pedido_id = $1';
-  const values = [id_pedido];
-
-  client.query(sqlQuery, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao obter os itens do pedido' });
-    }
-
-    const itens = result.rows;
-    res.status(200).json(itens);
-  });
-});
-
-// Cancelar um pedido
-app.put('/api/pedidos/:id_pedido/cancelar', (req, res) => {
-  const { id_pedido } = req.params;
-
-  const sqlQuery = 'UPDATE pedidos SET status = $1 WHERE id = $2';
-  const values = ['cancelado', id_pedido];
-
-  client.query(sqlQuery, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).json({ error: 'Erro ao cancelar o pedido' });
-    }
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Pedido não encontrado' });
-    }
-
-    console.log('Pedido cancelado com sucesso');
-
-    res.status(204).send();
-  });
-});
 
 // Criar um novo produto
 app.post('/api/produtos/criar', (req, res) => {
@@ -410,3 +415,4 @@ app.delete('/api/produtos/:id_produto/deletar', (req, res) => {
     res.status(204).send();
   });
 });
+

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "mobile",
-    "slug": "mobile",
+    "slug": "handcrafties",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6d8a7f70-8952-41f5-aa8d-a32a00edc227"
+      }
+    },
+    "owner": "thais_silva"
   }
-
+}

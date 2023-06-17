@@ -70,7 +70,9 @@ export default Home = ({ navigation }) => {
           inactiveDotScale={0.8}
         />
  <Divider style={{margin: 20}}/>
- <Text category='h1' style={{alignSelf:'center', fontSize:60}}>-</Text>
+ <Layout style={styles.buttonsContainer}>
+          <Button style={styles.button} onPress={() => navigation.navigate('About')}>Saiba mais</Button>
+        </Layout>
       </Layout>
     </ApplicationProvider>
   );

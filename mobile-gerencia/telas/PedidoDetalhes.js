@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Divider, Layout, useTheme, Text, Button, ApplicationProvider } from '@ui-kitten/components';
+import { Card, Divider, Layout, useTheme, Text, Button, Icon, ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
 import { useNavigation } from '@react-navigation/native';
+import { EvaIconsPack } from '@ui-kitten/eva-icons';
+import { TrashIcon, EditIcon } from '@ui-kitten/eva-icons';
+
 
 const theme = {
   ...lightTheme,
@@ -23,15 +26,15 @@ const PedidoDetalhes = ({ route }) => {
   const getStatusTextColor = (status) => {
     switch (status) {
       case 'Concluído':
-        return '#00CC00'; 
+        return '#00CC00';
       case 'Em andamento':
-        return '#0066FF'; 
+        return '#0066FF';
       case 'Pendente':
         return '#FFA500';
       case 'Cancelado':
-        return '#FF0000'; 
+        return '#FF0000';
       default:
-        return '#000000'; 
+        return '#000000';
     }
   };
 
@@ -84,7 +87,7 @@ const PedidoDetalhes = ({ route }) => {
                 };
               });
           });
-    
+
           Promise.all(itemPromises)
             .then((itens) => {
               setItensPedido(itens);
@@ -97,21 +100,50 @@ const PedidoDetalhes = ({ route }) => {
           console.error('Erro ao realizar a chamada de API:', error);
         });
     };
-   
+
 
     fetchCliente();
     fetchItensPedido();
   }, []);
 
+  const handleEditarPedido = () => {
+    navigation.navigate('EditarPedido', { pedidoId: pedido.id });
+  };
+  
+  const handleExcluirPedido = async () => {
+    try {
+      const response = await fetch(`http://handcrafedpaty-api.onrender.com/api/pedidos/${pedido.id}`, {
+        method: 'DELETE',
+      });
+  
+      if (response.ok) {
+        navigation.navigate('Pedidos');
+      } else {
+        throw new Error('Erro ao excluir o pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao realizar a chamada de API:', error);
+    }
+  };
+  
   return (
-    <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} customFonts={{}}>
+    <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} icons={EvaIconsPack}>
       <Layout style={{ flex: 1, padding: 16, backgroundColor: theme['background-basic-color-1'] }}>
         <Divider />
         <TouchableOpacity onPress={handleGoBack} style={{ position: 'absolute', top: 16, right: 16, zIndex: 999 }}>
           <Text category="h1">↩</Text>
         </TouchableOpacity>
         <Text category="h3" style={{ marginBottom: 16 }}>Detalhes do Pedido</Text>
-        <Divider style={{ marginBottom: 25 }} />
+        <Divider style={{ marginBottom: 5 }} />
+        <View style={styles.buttonContainer}>
+        <Button style={styles.button} onPress={handleEditarPedido} appearance="ghost" status="primary" accessoryLeft={EditIcon}>
+  Editar
+</Button>
+<Button style={styles.button} textStyle={styles.buttonText} onPress={handleExcluirPedido} appearance="ghost" status="danger" accessoryLeft={TrashIcon}>
+  Excluir
+</Button>
+        </View>
+        <Divider style={{ marginBottom: 15 }} />
         <Card style={{ marginBottom: 16 }}>
           <Layout>
             <View style={styles.view}>
@@ -121,8 +153,8 @@ const PedidoDetalhes = ({ route }) => {
               <Text category="h5">Status:</Text>
               <Text category="h5" style={{ marginLeft: 8, color: getStatusTextColor(pedido.status) }}>{pedido.status}</Text>
             </View>
-              <Text category="h5">Informações de Envio:</Text>
-              <Text category="h6" style={{ marginLeft: 8 }}>{pedido.informacoes_envio}</Text>
+            <Text category="h5">Informações de Envio:</Text>
+            <Text category="h6" style={{ marginLeft: 8 }}>{pedido.informacoes_envio}</Text>
           </Layout>
         </Card>
 
@@ -147,7 +179,7 @@ const PedidoDetalhes = ({ route }) => {
 
         {itensPedido.length > 0 && (
           <Card style={{ marginBottom: 16 }}>
-            <Layout style={{justifyContent: 'space-between'}}>
+            <Layout style={{ justifyContent: 'space-between' }}>
               <View style={styles.view}>
                 <Text category="h4">Itens do Pedido:</Text>
               </View>
@@ -171,8 +203,17 @@ const styles = StyleSheet.create({
   view: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 2,
   },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 2,
+
+    },
+    button: {
+      marginHorizontal: 8,
+    },
 });
 
 export default PedidoDetalhes;
