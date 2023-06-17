@@ -100,7 +100,7 @@ app.delete('/api/pedidos/:id_pedido', (req, res) => {
   const { id_pedido } = req.params;
   
   const sqlQuery = 'DELETE FROM pedidos WHERE id = $1';
-  const values = [id];
+  const values = [id_pedido];
   
   client.query(sqlQuery, values, (err, result) => {
   if (err) {
