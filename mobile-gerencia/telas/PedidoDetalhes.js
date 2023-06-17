@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Divider, Layout, useTheme, Text, Button, Icon, ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation} from '@react-navigation/native';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { TrashIcon, EditIcon } from '@ui-kitten/eva-icons';
 
@@ -136,9 +136,6 @@ const PedidoDetalhes = ({ route }) => {
         <Text category="h3" style={{ marginBottom: 16 }}>Detalhes do Pedido</Text>
         <Divider style={{height:2, marginBottom: 5 }} />
         <View style={styles.buttonContainer}>
-          <Button style={styles.button} appearance="ghost" status="primary" accessoryLeft={EditIcon}>
-            Editar
-          </Button>
           <Button style={styles.button} textStyle={styles.buttonText} onPress={handleExcluirPedido} appearance="ghost" status="danger" accessoryLeft={TrashIcon}>
             Excluir
           </Button>

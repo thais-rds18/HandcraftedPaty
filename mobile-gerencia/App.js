@@ -12,7 +12,7 @@ import Pedidos from './telas/Pedidos';
 import PedidoDetalhes from './telas/PedidoDetalhes';
 import Home from './telas/Home';
 import About from './telas/About';
-import EditarPedido from './telas/EditarPedido';
+
 
 const Stack = createStackNavigator();
 
@@ -31,7 +31,6 @@ const App = () => {
             <Stack.Screen name="Produtos" component={Produtos} options={{ title: 'Produtos' }} />
             <Stack.Screen name="Pedidos" component={Pedidos} options={{ title: 'Pedidos' }} />
             <Stack.Screen name="PedidoDetalhes" component={PedidoDetalhes} options={{ title: 'Detalhes do Pedido' }} />
-            <Stack.Screen name="EditarPedido" component={EditarPedido} options={{ title: 'Editar Pedido' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ApplicationProvider>

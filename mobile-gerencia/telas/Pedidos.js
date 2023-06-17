@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Card, Divider, Layout, useTheme, Text, Button, ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation , useIsFocused } from '@react-navigation/native';
 import useSWR from 'swr';
 
 const theme = {
@@ -15,6 +15,7 @@ const theme = {
 
 const Pedidos = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -24,13 +25,21 @@ const Pedidos = () => {
   const [searchText, setSearchText] = useState('');
   const theme = useTheme();
 
+
   const fetchPedidos = async (url) => {
     const response = await fetch(url);
     const data = await response.json();
     return data;
   };
 
-  const { data: pedidos, error } = useSWR('https://handcrafties-api-production.up.railway.app/api/pedidos', fetchPedidos);
+  const { data: pedidos, error, mutate } = useSWR('https://handcrafties-api-production.up.railway.app/api/pedidos', fetchPedidos);
+
+  useEffect(() => {
+    if (isFocused) {
+      mutate();
+    }
+  }, [isFocused, mutate]);
+
 
   const handleSearch = () => {
     const filteredPedidos = pedidos.filter((pedido) => {
@@ -63,11 +72,11 @@ const Pedidos = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handlePedidoPress(item)}>
       <Card style={{ marginBottom: 16, backgroundColor: "#c9dff0" }}>
-        <Layout style={{borderRadius:10}}>
+        <Layout style={{ borderRadius: 10 }}>
           <View style={styles.view}>
             <Text category="h4">Pedido nº {item.id}</Text>
           </View>
-          <Divider style={{height:4, backgroundColor:'#c9dff0'}}/>
+          <Divider style={{ height: 4, backgroundColor: '#c9dff0' }} />
           <View style={styles.view}>
             <Text category="h5">Status: <Text category="h6" style={{ color: getStatusColor(item.status) }}>{item.status}</Text></Text>
           </View>
@@ -77,7 +86,7 @@ const Pedidos = () => {
               <Text category="h6" style={styles.envioText}>{item.informacoes_envio}</Text>
             </View>
           </View>
-          <Button onPress={() => handlePedidoPress(item)} style={{ marginTop: 8, backgroundColor: "#604c7d"}}>Ver Detalhes</Button>
+          <Button onPress={() => handlePedidoPress(item)} style={{ marginTop: 8, backgroundColor: "#604c7d" }}>Ver Detalhes</Button>
         </Layout>
       </Card>
     </TouchableOpacity>
