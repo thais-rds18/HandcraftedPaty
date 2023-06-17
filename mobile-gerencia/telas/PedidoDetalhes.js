@@ -43,7 +43,7 @@ const PedidoDetalhes = ({ route }) => {
 
   useEffect(() => {
     const fetchCliente = () => {
-      fetch(`http://handcrafedpaty-api.onrender.com/api/clientes/${pedido.cliente_id}`)
+      fetch(`https://handcrafties-api-production.up.railway.app/api/clientes/${pedido.cliente_id}`)
         .then((response) => {
           if (response.ok) {
             return response.json();
@@ -60,7 +60,7 @@ const PedidoDetalhes = ({ route }) => {
     };
 
     const fetchItensPedido = () => {
-      fetch(`http://handcrafedpaty-api.onrender.com/api/pedidos/${pedido.id}/itens`)
+      fetch(`https://handcrafties-api-production.up.railway.app/api/pedidos/${pedido.id}/itens`)
         .then((response) => {
           if (response.ok) {
             return response.json();
@@ -70,7 +70,7 @@ const PedidoDetalhes = ({ route }) => {
         })
         .then((data) => {
           const itemPromises = data.map((item) => {
-            return fetch(`http://handcrafedpaty-api.onrender.com/api/produtos/${item.produto_id}`)
+            return fetch(`https://handcrafties-api-production.up.railway.app/api/produtos/${item.produto_id}`)
               .then((response) => {
                 if (response.ok) {
                   return response.json();
@@ -109,13 +109,13 @@ const PedidoDetalhes = ({ route }) => {
   const handleEditarPedido = () => {
     navigation.navigate('EditarPedido', { pedidoId: pedido.id });
   };
-  
+
   const handleExcluirPedido = async () => {
     try {
-      const response = await fetch(`http://handcrafedpaty-api.onrender.com/api/pedidos/${pedido.id}`, {
+      const response = await fetch(`https://handcrafties-api-production.up.railway.app/api/pedidos/${pedido.id}`, {
         method: 'DELETE',
       });
-  
+
       if (response.ok) {
         navigation.navigate('Pedidos');
       } else {
@@ -125,26 +125,27 @@ const PedidoDetalhes = ({ route }) => {
       console.error('Erro ao realizar a chamada de API:', error);
     }
   };
-  
+
   return (
     <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} icons={EvaIconsPack}>
       <Layout style={{ flex: 1, padding: 16, backgroundColor: theme['background-basic-color-1'] }}>
-        <Divider />
+        <Divider style={{height:2}}/>
         <TouchableOpacity onPress={handleGoBack} style={{ position: 'absolute', top: 16, right: 16, zIndex: 999 }}>
           <Text category="h1">↩</Text>
         </TouchableOpacity>
         <Text category="h3" style={{ marginBottom: 16 }}>Detalhes do Pedido</Text>
-        <Divider style={{ marginBottom: 5 }} />
+        <Divider style={{height:2, marginBottom: 5 }} />
         <View style={styles.buttonContainer}>
-        <Button style={styles.button} onPress={handleEditarPedido} appearance="ghost" status="primary" accessoryLeft={EditIcon}>
-  Editar
-</Button>
-<Button style={styles.button} textStyle={styles.buttonText} onPress={handleExcluirPedido} appearance="ghost" status="danger" accessoryLeft={TrashIcon}>
-  Excluir
-</Button>
+          <Button style={styles.button} onPress={handleEditarPedido} appearance="ghost" status="primary" accessoryLeft={EditIcon}>
+            Editar
+          </Button>
+          <Button style={styles.button} textStyle={styles.buttonText} onPress={handleExcluirPedido} appearance="ghost" status="danger" accessoryLeft={TrashIcon}>
+            Excluir
+          </Button>
         </View>
-        <Divider style={{ marginBottom: 15 }} />
-        <Card style={{ marginBottom: 16 }}>
+        <Divider style={{height:2, marginBottom: 15 }} />
+        <View style={{ padding:10,backgroundColor: "#c9dff0" }}>
+        <Card  style={{ margin: 10 }}>
           <Layout>
             <View style={styles.view}>
               <Text category="h4">Pedido nº {pedido.id}</Text>
@@ -159,7 +160,7 @@ const PedidoDetalhes = ({ route }) => {
         </Card>
 
         {cliente && (
-          <Card style={{ marginBottom: 16 }}>
+          <Card style={{ margin: 10 }}>
             <Layout>
               <View style={styles.view}>
                 <Text category="h4">Cliente:</Text>
@@ -178,22 +179,22 @@ const PedidoDetalhes = ({ route }) => {
         )}
 
         {itensPedido.length > 0 && (
-          <Card style={{ marginBottom: 16 }}>
+          <Card style={{ margin: 10 }}>
             <Layout style={{ justifyContent: 'space-between' }}>
               <View style={styles.view}>
                 <Text category="h4">Itens do Pedido:</Text>
               </View>
               {itensPedido.map((item) => (
                 <View style={styles.view} key={item.id}>
-                  <Text category="h6">ID {item.produto_id}</Text>
+                  <Text category="h6">ID {item.produto_id} -</Text>
                   <Text category="h6" style={{ marginLeft: 8 }}>{item.nome}</Text>
-                  <Text category="h6" style={{ marginLeft: 16 }}>QTD:</Text>
-                  <Text category="h6" style={{ marginLeft: 8 }}>{item.quantidade}</Text>
+                  <Text category="h6" style={{ marginLeft: 8 }}>| x{item.quantidade}</Text>
                 </View>
               ))}
             </Layout>
           </Card>
         )}
+        </View>
       </Layout>
     </ApplicationProvider>
   );
@@ -205,15 +206,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 2,
   },
-    buttonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginBottom: 2,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 2,
 
-    },
-    button: {
-      marginHorizontal: 8,
-    },
+  },
+  button: {
+    marginHorizontal: 8,
+  },
 });
 
 export default PedidoDetalhes;

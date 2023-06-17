@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { StyleSheet, Image, View } from 'react-native';
 import { Button, Card, Layout, Text, ApplicationProvider, Divider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -14,11 +15,12 @@ const theme = {
   "background-basic-color-1": "#fcf9fb",
 };
 
-export default Home = ({ navigation }) => {
+const Home = () => {
+  const navigation = useNavigation();
   const [activeSlide, setActiveSlide] = useState(0);
 
   const carouselData = [
-    { id: 1, title: 'Pedidos', description: 'Lista dos pedidos.', image: require('../assets/pedidos.jpg')},
+    { id: 1, title: 'Pedidos', description: 'Lista dos pedidos.', image: require('../assets/pedidos.jpg') },
     { id: 2, title: 'Clientes', description: 'Lista dos clientes cadastrados.', image: require('../assets/clientes.jpg') },
     { id: 3, title: 'Produtos', description: 'Lista de produtos disponíveis.', image: require('../assets/produtos.jpg') },
   ];
@@ -30,7 +32,7 @@ export default Home = ({ navigation }) => {
       <Text style={styles.cardDescription}>{item.description}</Text>
     </Card>
   );
- 
+
 
   const navigateToPage = (itemId) => {
     switch (itemId) {
@@ -50,14 +52,16 @@ export default Home = ({ navigation }) => {
   return (
     <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} customFonts={{}}>
       <Layout style={styles.container}>
-      <Divider />
+        <View style={{ backgroundColor:'#fcf9fb', borderRadius: 5, marginBottom:15}}>
+        <Divider style={{ marginTop: 25, height:4 }}/>
         <Text category="h5" style={styles.desc}>Bem vindo de volta, ADM! O que deseja fazer hoje?</Text>
-        <Divider style={{marginBottom: 25}}/>
-        <Carousel 
+        <Divider style={{ marginBottom: 25, height:4  }} />
+        </View>
+        <Carousel
           data={carouselData}
           renderItem={renderCarouselItem}
-          sliderWidth={350}
-          itemWidth={350}
+          sliderWidth={380}
+          itemWidth={380}
           onSnapToItem={(index) => setActiveSlide(index)}
         />
         <Pagination
@@ -69,8 +73,8 @@ export default Home = ({ navigation }) => {
           inactiveDotOpacity={0.6}
           inactiveDotScale={0.8}
         />
- <Divider style={{margin: 20}}/>
- <Layout style={styles.buttonsContainer}>
+        <Divider style={{ height:3, margin: 15 }} />
+        <Layout style={styles.buttonsContainer}>
           <Button style={styles.button} onPress={() => navigation.navigate('About')}>Saiba mais</Button>
         </Layout>
       </Layout>
@@ -82,6 +86,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
+    backgroundColor: '#e4dff5'
   },
   desc: {
     width: 'auto',
@@ -132,13 +137,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignContent: 'center',
-    marginBottom: 40,
+    margin: 20,
   },
   button: {
     flex: 1,
-    marginHorizontal: 8,
   },
 });
 
 
-
+export default Home;

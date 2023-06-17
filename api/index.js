@@ -121,7 +121,7 @@ app.delete('/api/pedidos/:id_pedido', (req, res) => {
 app.get('/api/pedidos/:id_pedido', (req, res) => {
   const { id_pedido } = req.params;
 
-  const sqlQuery = 'SELECT pedidos.id, pedidos.status, pedidos.data, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
+  const sqlQuery = 'SELECT pedidos.id, pedidos.status, pedidos.date, itens_pedido.produto_id, itens_pedido.quantidade FROM pedidos LEFT JOIN itens_pedido ON pedidos.id = itens_pedido.pedido_id WHERE pedidos.id = $1';
   const values = [id_pedido];
 
   client.query(sqlQuery, values, (err, result) => {
@@ -137,7 +137,7 @@ app.get('/api/pedidos/:id_pedido', (req, res) => {
     const pedido = {
       id: result.rows[0].id,
       status: result.rows[0].status,
-      data: result.rows[0].data,
+      date: result.rows[0].date,
       itens: result.rows.map(row => ({
         produto_id: row.produto_id,
         quantidade: row.quantidade
@@ -151,10 +151,10 @@ app.get('/api/pedidos/:id_pedido', (req, res) => {
 // Atualizar um pedido
 app.put('/api/pedidos/:id_pedido/atualizar', (req, res) => {
   const { id_pedido } = req.params;
-  const { status } = req.body;
+  const { status, informacoes_envio } = req.body;
 
-  const sqlQuery = 'UPDATE pedidos SET status = $1 WHERE id = $2';
-  const values = [status, id_pedido];
+  const sqlQuery = 'UPDATE pedidos SET status = $1, informacoes_envio = $2 WHERE id = $3';
+  const values = [status, informacoes_envio, id_pedido];
 
   client.query(sqlQuery, values, (err, result) => {
     if (err) {
@@ -171,6 +171,7 @@ app.put('/api/pedidos/:id_pedido/atualizar', (req, res) => {
     res.status(200).send();
   });
 });
+
 
 // Obter todos os pedidos
 app.get('/api/pedidos', (req, res) => {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Card, Divider, Layout, useTheme, Text, Button, ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
 import { useNavigation } from '@react-navigation/native';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 
 const theme = {
   ...lightTheme,
@@ -21,6 +21,8 @@ const Produtos = () => {
   };
 
   const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+
   const theme = useTheme();
 
   const fetcher = async (url) => {
@@ -30,7 +32,7 @@ const Produtos = () => {
   };
 
   const { data: produtos, error: produtosError } = useSWR(
-    'http://handcrafedpaty-api.onrender.com/api/produtos',
+    'https://handcrafties-api-production.up.railway.app/api/produtos',
     fetcher
   );
 
@@ -39,6 +41,8 @@ const Produtos = () => {
       return produto.nome.toLowerCase().includes(searchText.toLowerCase());
     });
     setSearchResults(filteredProdutos);
+
+    mutate('https://handcrafties-api-production.up.railway.app/api/produtos');
   };
 
   if (produtosError) {
@@ -50,9 +54,9 @@ const Produtos = () => {
   }
 
   const renderItem = ({ item }) => (
-    <Card style={{ marginBottom: 16 }}>
+    <Card style={{ marginBottom: 16, borderColor:"#c9dff0", borderWidth: 3, borderTopWidth: 10}}>
       <Layout>
-        <View style={styles.view}>
+      <View style={styles.view}>
           <Image style={styles.image} source={{ uri: item.imagem_url }} />
           <View style={styles.textContainer}>
             <Text category="h5">{item.nome}</Text>
@@ -86,7 +90,7 @@ const Produtos = () => {
         </View>
         {produtos ? (
           <FlatList
-            data={produtos}
+            data={searchResults.length > 0 ? searchResults : produtos} 
             renderItem={renderItem}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ paddingBottom: 16 }}

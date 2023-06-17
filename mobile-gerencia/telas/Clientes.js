@@ -3,6 +3,7 @@ import { View, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from '
 import { Card, Divider, Layout, useTheme, Text, Button, ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light as lightTheme } from '@eva-design/eva';
 import { useNavigation } from '@react-navigation/native';
+import useSWR from 'swr';
 
 const theme = {
   ...lightTheme,
@@ -19,31 +20,20 @@ const Clientes = () => {
     navigation.goBack();
   };
 
-  const [clientes, setClientes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [searchText, setSearchText] = useState('');
   const theme = useTheme();
 
-  useEffect(() => {
-    fetchClientes();
-  }, []);
-
-  const fetchClientes = async () => {
-    setLoading(true);
-
-    try {
-      const response = await fetch('http://handcrafedpaty-api.onrender.com/api/clientes');
-      const data = await response.json();
-      setClientes(data);
-      setError(null);
-    } catch (error) {
-      setError(error.message);
-    }
-
-    setLoading(false);
+  const fetcher = async (url) => {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
   };
+
+  const { data: clientes, error: clientesError } = useSWR(
+    'https://handcrafties-api-production.up.railway.app/api/clientes',
+    fetcher
+  );
 
   const handleSearch = () => {
     const filteredClientes = clientes.filter((cliente) => {
@@ -55,31 +45,22 @@ const Clientes = () => {
     setSearchResults(filteredClientes);
   };
 
-
-  if (loading) {
+  if (clientesError) {
     return (
       <View>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View>
-        <Text>Error: {error}</Text>
+        <Text>Error: {clientesError.message}</Text>
       </View>
     );
   }
 
   const renderItem = ({ item }) => (
-    <Card style={{ marginBottom: 16 }}>
+    <Card style={{ marginBottom: 16, borderColor:"#c9dff0", borderWidth: 3, borderTopWidth: 10}}>
       <Layout>
         <View style={styles.view}>
           <Text category="h4">{item.id}</Text>
           <Text category="h4" style={{ marginLeft: 15 }}>- {item.nome}</Text>
         </View>
-        <Divider />
+        <Divider style={{height:3, backgroundColor:'#c9dff0'}}/>
         <View style={styles.view}><Image style={{ width: 15, height: 15 }} source={require('./../assets/email.png')}></Image><Text category="h6" style={{ marginLeft: 8 }}>{item.email}</Text></View>
         <View style={styles.view}><Image style={{ width: 15, height: 15 }} source={require('./../assets/map.png')}></Image><Text category="h6" style={{ marginLeft: 8 }}>{item.endereco}</Text></View>
         <View style={styles.view}><Image style={{ width: 15, height: 15 }} source={require('./../assets/phone.png')}></Image><Text category="h6" style={{ marginLeft: 8 }}>{item.contato}</Text></View>
@@ -138,9 +119,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 4,
-
   },
-  
 });
 
 export default Clientes;

@@ -21,13 +21,13 @@ const About = () => {
 
   return (
     <ApplicationProvider mapping={mapping} theme={theme} customMapping={mapping} customFonts={{}}>
-      <Layout style={{ flex: 1, padding: 16 }}>
+      <Layout style={{ flex: 1, padding: 16, backgroundColor: '#e4dff5' }}>
         <TouchableOpacity onPress={handleGoBack} style={{ position: 'absolute', top: 16, right: 16, zIndex: 999 }}>
           <Text category="h1">↩</Text>
         </TouchableOpacity>
 
         <Text style={{ marginBottom: 20 }} category="h3">Sobre nós</Text>
-        <Divider style={{ margin: 15 }} />
+        <Divider style={{ margin: 15, height:2 }} />
 
         <ScrollView>
           <Card style={styles.card}>
@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     margin: 5,
+    
   }
 });
 
